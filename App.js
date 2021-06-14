@@ -1,5 +1,5 @@
-import React, { Component, useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, Animated, Button, Image,} from 'react-native';
+import React, { Component, useState, useEffect, useMemo } from 'react';
+import { StyleSheet, ActivityIndicator, TouchableWithoutFeedback, Keyboard} from 'react-native';
 import Svg, {Path} from 'react-native-svg';
 import axios from 'axios';
 import styled from 'styled-components/native';
@@ -9,109 +9,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SecureStore from 'expo-secure-store';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import LoginScreen from './components/LoginScreen.js';
+import { AuthContext } from './components/AuthContext.js';
 
 const Stack = createStackNavigator();
 
 
-const LabelInput = (props) => {
-  const [isFocused, handleIsFocused] = useState(false);
-  const animatedIsFocused = useRef(new Animated.Value(props.value === '' ? 0:1)).current;
-  
-  useEffect(() => {
-    Animated.timing(animatedIsFocused, {
-      toValue: (isFocused || props.value !== '') ? 0 : 1,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  })
-
-  const labelStyle = {
-    position: 'absolute',
-    left: 0,
-    top: animatedIsFocused.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-20, -5],
-    }),
-    fontSize: animatedIsFocused.interpolate({
-      inputRange: [0, 1],
-      outputRange: [14, 20],
-    })
-  }
-
-
-  return (
-    <View {...props}>
-      <T style={labelStyle}>{props.label}</T>
-      <TextInput
-        onFocus={()=>handleIsFocused(true)}
-        onBlur={()=>handleIsFocused(false)}
-        {...props} 
-        style={styles.input} 
-        secureTextEntry={props.isPsd} 
-        label="Login" 
-       />
-    </View>
-  )
-};
-
-const LoginScreen = ({navigation}) => {
-  const [inputValue, setInputValue] = useState('');
-  const [psswdValue, setPsswdValue] = useState('');
-  const [svgFill, setSvgFill] = useState('#d8b9c3');
-
-  const sendLoginRequest = () => {
-    axios.post("https://zbccbeam.herokuapp.com/api/login", {
-      email: inputValue,
-      password: psswdValue,
-    },{
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",   
-      },
-    }).then(response=>{
-      SecureStore.setItemAsync("token", response.data.token);
-    }).catch(err=>{
-        console.log(err);
-    });
-    // axios.get("http://zbccbeam.herokuapp.com/api/cos").then(response=>{
-    //   console.log
-    // })
-  }
-
-  return (
-    <Container>
-    <LoginBox behavior={"padding"} style={styles.test}>
-        <Svg style={{marginBottom: 54, marginLeft: 'auto', marginRight: 'auto'}} fill={svgFill} width='50%' height='100' viewBox='-15 0 100 100'><Path
-        d='M15.92 68.5l8.8 12.546 3.97 13.984-9.254-7.38-4.622-15.848zm27.1 0l-8.8 12.546-3.976 13.988 9.254-7.38 4.622-15.848zm6.11-27.775l.108-11.775-21.16-14.742L8.123 26.133 8.09 40.19l-3.24.215 1.462 9.732 5.208 1.81 2.36 11.63 9.72 11.018 10.856-.324 9.56-10.37 1.918-11.952 5.207-1.81 1.342-9.517zm-43.085-1.84l-.257-13.82L28.226 11.9l23.618 15.755-.216 10.37 4.976-17.085L42.556 2.376 25.49 0 10.803 3.673.002 24.415z'/></Svg>
-      <LabelInput
-        label="Email"
-        value={inputValue}
-        onChangeText={(newText) => setInputValue(newText)}
-        isPsd={false}
-      />
-      <LabelInput
-        style={{marginTop: 25}}
-        label="Hasło"
-        value={psswdValue}
-        onChangeText={(newPsswd) => setPsswdValue(newPsswd)}
-        isPsd={true}
-      />
-      <Btn onPress={() => sendLoginRequest()} style={{marginTop: 50}}>
-        <Text>
-          Zaloguj
-        </Text>
-      </Btn>
-    </LoginBox>
-    </Container>
-  );
-};
 
 const HomeScreen = ({navigation}) => {
+  const { signOut } = React.useContext(AuthContext);
   return (
     <Container>
       <T>A KURWA</T>
       <TouchableOpacity
-        onPress={() => navigation.navigate("TabOne")}
+        onPress={() => {signOut()}}
       >
         <T>LECIMY KURWA DALEJ</T>
       </TouchableOpacity>
@@ -119,74 +30,65 @@ const HomeScreen = ({navigation}) => {
   )
 };
 
-const TabOne = () => {
+const TabOne = ({navigation}) => {
   return(
     <Container>
+      <TouchableOpacity onPress={() => {SecureStore.deleteItemAsync("token"); navigation.navigate("Login")}}>
+        <T>Wyloguj</T>
+      </TouchableOpacity>
     </Container>
   )
 };
 
-const Body = () =>{
-  return (
-    <View>
-      
-    </View>
-  )
-};
+export default function App({navigation}) {
 
-export default function App() {
+  const [token, setToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [token, setToken] = useState('');
+  const authContext = useMemo(() => ({
+    signIn: (t) => {
+      setIsLoading(false);
+      setToken(t);
+    },
+    signOut: () => {
+      setToken(null);
+      setIsLoading(false);
+    }
+  }))
 
   useEffect(()=>{
-    getToken();
+    setTimeout(function(){
+      setIsLoading(false)
+    }, 1000);
+
   }, []);
 
-  getToken = async () => {
-    try{
-      let value = await SecureStore.getItemAsync("token");
-       if(value){
-        setToken(value);
-       }
-       else{
-         setToken(null);
-       }
-    } catch(e){}
-  };
-
-  // getToken();
+  if(isLoading){
+    return(
+      <Container>
+        <ActivityIndicator color="#d8b9c3" size="large" />
+      </Container>
+    )
+  }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {token == null ? (
-          <Stack.Screen name="Login" component={LoginScreen} 
-          options={{
-            title: '',
-            headerShown: false,
-          }}
-        />
-        ) : (
-          <>
-            <Stack.Screen name="main" component={HomeScreen} 
-              options={{
-                title: '',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen name="TabOne" options={{
-                title: '',
-                headerShown: false,
-              }} component={TabOne} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthContext.Provider value={authContext}>
+      <NavigationContainer>
+          <Stack.Navigator screenOptions={{headerShown: false}}>
+            { token == null ?
+              (
+                  <Stack.Screen name="SignIn" component={LoginScreen} />
+                )
+                :
+                (
+                  <Stack.Screen name="Main" component={HomeScreen} />
+              )
+            }
+          </Stack.Navigator>
+      </NavigationContainer>
+    </AuthContext.Provider>
   );
 }
-
-
-
 
 const styles = StyleSheet.create({
   container: {
