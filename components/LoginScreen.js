@@ -1,12 +1,12 @@
-import React, { Component, useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, Animated, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import Svg, {Path} from 'react-native-svg';
 import axios from 'axios';
-import styled from 'styled-components/native';
 import { Container, LoginBox, T, Btn} from '../styled.js';
 import 'react-native-gesture-handler';
 import * as SecureStore from 'expo-secure-store';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '../store/actions';
 import { AuthContext } from './AuthContext.js';
 
 const LabelInput = (props) => {
@@ -26,11 +26,11 @@ const LabelInput = (props) => {
       left: 0,
       top: animatedIsFocused.interpolate({
         inputRange: [0, 1],
-        outputRange: [-20, -5],
+        outputRange: [-20, 5],
       }),
       fontSize: animatedIsFocused.interpolate({
         inputRange: [0, 1],
-        outputRange: [14, 20],
+        outputRange: [14, 14],
       })
     }
     const styles = StyleSheet.create({
@@ -53,19 +53,23 @@ const LabelInput = (props) => {
           {...props} 
           style={styles.input} 
           secureTextEntry={props.isPsd} 
-          label="Login" 
+          label="Login"
+          autoCorrect={false}
+          spellCheck={false}
          />
       </View>
     )
 };
 
-const LoginScreen = ({navigation}) => {
+const LoginScreen = (props) => {
     const [inputValue, setInputValue] = useState('');
     const [psswdValue, setPsswdValue] = useState('');
+    const [errMsg, setErrMsg] = useState('');
     const [svgFill, setSvgFill] = useState('#d8b9c3');
 
-    const { signIn } = useContext(AuthContext);
+    const dispatch = useDispatch();
 
+    // const { signIn, signOut, handleLoading } = useContext(AuthContext);
 
     const styles = StyleSheet.create({
         test: {
@@ -83,7 +87,7 @@ const LoginScreen = ({navigation}) => {
 
     const sendLoginRequest = () => {
         Keyboard.dismiss;
-
+        props.loading(true);
         axios.post("https://zbccbeam.herokuapp.com/api/login", {
         email: inputValue,
         password: psswdValue,
@@ -94,13 +98,11 @@ const LoginScreen = ({navigation}) => {
         },
         }).then(response=>{
             SecureStore.setItemAsync("token", response.data.token);
-            signIn(response.data.token);
+            dispatch(login(response.data.user, response.data.token));
+            props.loading(false);
         }).catch(err=>{
             console.log(err);
         });
-        // axios.get("http://zbccbeam.herokuapp.com/api/cos").then(response=>{
-        //   console.log
-        // })
     }
 
     return (
@@ -109,6 +111,7 @@ const LoginScreen = ({navigation}) => {
                 <LoginBox behavior={"padding"} style={styles.test}>
                     <Svg style={{marginBottom: 54, marginLeft: 'auto', marginRight: 'auto'}} fill={svgFill} width='50%' height='100' viewBox='-15 0 100 100'><Path
                     d='M15.92 68.5l8.8 12.546 3.97 13.984-9.254-7.38-4.622-15.848zm27.1 0l-8.8 12.546-3.976 13.988 9.254-7.38 4.622-15.848zm6.11-27.775l.108-11.775-21.16-14.742L8.123 26.133 8.09 40.19l-3.24.215 1.462 9.732 5.208 1.81 2.36 11.63 9.72 11.018 10.856-.324 9.56-10.37 1.918-11.952 5.207-1.81 1.342-9.517zm-43.085-1.84l-.257-13.82L28.226 11.9l23.618 15.755-.216 10.37 4.976-17.085L42.556 2.376 25.49 0 10.803 3.673.002 24.415z'/></Svg>
+                <Text>{errMsg}</Text>
                 <LabelInput
                     label="Email"
                     value={inputValue}
