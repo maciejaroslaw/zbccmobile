@@ -1,12 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import 'react-native-gesture-handler';
 import styled from 'styled-components';
 import { Fonts, Colors} from '../styles';
 import { StyleSheet } from 'react-native';
 import Card from './HomeScreenCard.js';
-
-import { AuthContext } from './AuthContext.js';
+import { useEffect } from 'react';
 
 const Container = styled.View`
   align-items: center;
@@ -15,6 +14,10 @@ const Container = styled.View`
 `;
 
 const HomeScreen = ({navigation}) => {
+
+    useEffect(() => {
+      
+    }, [])
     return (
       <Container style={{backgroundColor: Colors.mainPurple }}>
         <View style={{width: '95%'}}>

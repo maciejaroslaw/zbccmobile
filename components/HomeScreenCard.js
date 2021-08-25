@@ -4,15 +4,15 @@ import 'react-native-gesture-handler';
 import {Cards, Fonts, Colors} from '../styles';
 import { StyleSheet } from 'react-native';
 
-import { AuthContext } from './AuthContext.js';
 import { useNavigation } from '@react-navigation/native';
-
+import { useDispatch } from 'react-redux';
+import {logout} from '../store/actions';
 
 const Card = (props) => {
-    // const { signIn, signOut } = React.useContext(AuthContext);
     const navigation = useNavigation();
+    const dispatch = useDispatch();
     return (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity onPress={()=> navigation.navigate(props.goTo)} style={styles.card}>
           <Text style={styles.cardTitle}>{props.text}</Text>
         </TouchableOpacity>
     )

@@ -9,8 +9,9 @@ import LoginScreen from '../components/LoginScreen.js';
 import HomeScreen from '../components/HomeScreen.js';
 import { useFonts, Righteous_400Regular } from '@expo-google-fonts/righteous';
 import BodyScreen from '../components/BodyScreen.js';
-import { useSelector } from 'react-redux';
-import { store } from '../store/store.js';
+import { useSelector, useDispatch } from 'react-redux';
+import * as SecureStore from 'expo-secure-store';
+import { saveToken } from '../store/actions';
 
 const Stack = createStackNavigator();
 
@@ -20,8 +21,8 @@ export default function Main() {
         Righteous_400Regular,
     })
 
-    const s = store.getState();
-    const token = useSelector((state)=>state.user.token);
+    const token = useSelector((state)=>state.token);
+    const dispatch = useDispatch();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -43,15 +44,15 @@ export default function Main() {
         setIsLoading(s);
     };
 
-    // const checkIfToken = () => {
-    //   SecureStore.getItemAsync("token").then(token=>{
-    //     setToken(token);
-    //     setIsLoading(false);
-    //   })
-    // }
+    const checkIfToken = () => {
+      SecureStore.getItemAsync("token").then(tkn=>{
+        dispatch(saveToken(tkn));
+        setIsLoading(false);
+      })
+    }
 
     useEffect(()=>{
-        console.log(token);
+        checkIfToken();
     }, []);
 
     if(isLoading || !fontsLoaded){

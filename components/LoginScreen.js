@@ -8,6 +8,8 @@ import * as SecureStore from 'expo-secure-store';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/actions';
 import { AuthContext } from './AuthContext.js';
+import Api from '../axios';
+
 
 const LabelInput = (props) => {
     const [isFocused, handleIsFocused] = useState(false);
@@ -85,24 +87,31 @@ const LoginScreen = (props) => {
         }
     });
 
-    const sendLoginRequest = () => {
+    const sendLoginRequest = async () => {
         Keyboard.dismiss;
         props.loading(true);
-        axios.post("https://zbccbeam.herokuapp.com/api/login", {
-        email: inputValue,
-        password: psswdValue,
-        },{
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",   
-        },
-        }).then(response=>{
-            SecureStore.setItemAsync("token", response.data.token);
-            dispatch(login(response.data.user, response.data.token));
-            props.loading(false);
-        }).catch(err=>{
-            console.log(err);
+        const result = await Api.post(`/login`, {
+          email: inputValue,
+          password: psswdValue,
         });
+        const data = result.data;
+        dispatch(login(data.user, data.token));
+        props.loading(false);
+        // axios.post("https://zbccbeam.herokuapp.com/api/login", {
+        // email: inputValue,
+        // password: psswdValue,
+        // },{
+        // headers: {
+        //     "Content-Type": "application/json",
+        //     Accept: "application/json",   
+        // },
+        // }).then(response=>{
+        //     SecureStore.setItemAsync("token", response.data.token);
+        //     dispatch(login(response.data.user, response.data.token));
+        //     props.loading(false);
+        // }).catch(err=>{
+        //     console.log(err);
+        // });
     }
 
     return (

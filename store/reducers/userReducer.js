@@ -1,12 +1,10 @@
-
-const reducer = (state = {user: {}, token: null}, action) => {
+const reducer = (state = {}, action) => {
     switch(action.type){
         case "USER_LOGIN":
             console.log(action.payload);
-            return {
-                user: action.payload.user,
-                token: action.payload.token,
-            }
+            return action.payload.user;
+        case "USER_LOG_OUT":
+            return {};
         default: return state;
     }
 };
