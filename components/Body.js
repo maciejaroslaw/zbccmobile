@@ -17,8 +17,8 @@ const Body = (props) => {
     };
       
     useEffect(() => {
-
-    });
+        props.getBodyData(parts);
+    }, [parts]);
     return (
         <View style={styles.humanBody}>
             <Svg onPress={() => {handleBodyPart('head')}} style={styles.head} fill={parts.includes('head') ? '#F67280':Colors.pastelPink} width='56.594' height='95.031' viewBox='0 0 56.594 95.031'><Path id="head" d='M15.92 68.5l8.8 12.546 3.97 13.984-9.254-7.38-4.622-15.848zm27.1 0l-8.8 12.546-3.976 13.988 9.254-7.38 4.622-15.848zm6.11-27.775l.108-11.775-21.16-14.742L8.123 26.133 8.09 40.19l-3.24.215 1.462 9.732 5.208 1.81 2.36 11.63 9.72 11.018 10.856-.324 9.56-10.37 1.918-11.952 5.207-1.81 1.342-9.517zm-43.085-1.84l-.257-13.82L28.226 11.9l23.618 15.755-.216 10.37 4.976-17.085L42.556 2.376 25.49 0 10.803 3.673.002 24.415z'/></Svg>
@@ -41,7 +41,7 @@ const Body = (props) => {
 const styles = StyleSheet.create({
     humanBody: {
         width: 207,
-        height: 260,
+        minHeight: 500,
         position: 'relative',
         transform: [{scale: .8}]
     },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: '50%',
         top: 455,
-        marginLeft: -35.5
+        marginLeft: -35.5,
     },
     rightFoot: {
         position: 'absolute',
